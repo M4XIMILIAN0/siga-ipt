@@ -1,0 +1,7 @@
+# Environment variables (secrets) - never commit
+.env
+
+# IDEs
+.idea/
+.vscode/
+*.iml
