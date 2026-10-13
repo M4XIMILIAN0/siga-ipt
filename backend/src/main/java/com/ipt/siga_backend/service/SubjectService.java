@@ -12,6 +12,7 @@ import com.ipt.siga_backend.repository.SubjectRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,6 +27,7 @@ public class SubjectService {
 
     private final SubjectRepository subjectRepository;
     private final StudyPlanRepository studyPlanRepository;
+
 
     public SubjectService(SubjectRepository subjectRepository, StudyPlanRepository studyPlanRepository) {
         this.subjectRepository = subjectRepository;

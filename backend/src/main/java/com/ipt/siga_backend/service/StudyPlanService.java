@@ -8,7 +8,9 @@ import com.ipt.siga_backend.exception.BadRequestException;
 import com.ipt.siga_backend.exception.ConflictException;
 import com.ipt.siga_backend.exception.NotFoundException;
 import com.ipt.siga_backend.repository.CareerRepository;
+import com.ipt.siga_backend.repository.StudentRepository;
 import com.ipt.siga_backend.repository.StudyPlanRepository;
+import com.ipt.siga_backend.repository.SubjectRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,10 +22,15 @@ public class StudyPlanService {
 
     private final StudyPlanRepository studyPlanRepository;
     private final CareerRepository careerRepository;
+    private final StudentRepository studentRepository;     // ← new
+    private final SubjectRepository subjectRepository;
 
-    public StudyPlanService(StudyPlanRepository studyPlanRepository, CareerRepository careerRepository) {
+    public StudyPlanService(StudyPlanRepository studyPlanRepository, CareerRepository careerRepository,
+                            StudentRepository studentRepository, SubjectRepository subjectRepository) {
         this.studyPlanRepository = studyPlanRepository;
         this.careerRepository = careerRepository;
+        this.studentRepository = studentRepository;
+        this.subjectRepository = subjectRepository;
     }
 
     @Transactional
@@ -62,6 +69,24 @@ public class StudyPlanService {
         if (studyPlanRepository.existsByCareerIdAndIdentifier(careerId, identifier)) {
             throw new ConflictException("Study plan identifier " + identifier + " already exists for career " + careerId);
         }
+    }
+
+    // RN-2.8: a study plan with students cannot be physically deleted
+    @Transactional
+    public void deleteStudyPlan(Long id) {
+        StudyPlan plan = findStudyPlanOrThrow(id);                                   // 404
+        if (studentRepository.existsByStudyPlanId(id)) {                             // RN-2.8 -> 409
+            throw new ConflictException("Study plan has students and cannot be deleted");
+        }
+        if (subjectRepository.existsByStudyPlanId(id)) {                             // FK guard -> 409
+            throw new ConflictException("Study plan has subjects; delete them first");
+        }
+        studyPlanRepository.delete(plan);
+    }
+
+    private StudyPlan findStudyPlanOrThrow(Long id) {
+        return studyPlanRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Study plan " + id + " not found"));
     }
 
     // RN-2.10: the previous CURRENT plan becomes NOT_CURRENT

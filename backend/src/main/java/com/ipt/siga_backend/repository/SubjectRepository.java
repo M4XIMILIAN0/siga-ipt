@@ -19,4 +19,6 @@ public interface SubjectRepository extends JpaRepository<Subject, Long> {
 
     // Is this subject a prerequisite of ANY other subject? (JOIN with subject_prerequisites)
     boolean existsByPrerequisitesId(Long subjectId);
+
+    boolean existsByStudyPlanId(Long studyPlanId);
 }

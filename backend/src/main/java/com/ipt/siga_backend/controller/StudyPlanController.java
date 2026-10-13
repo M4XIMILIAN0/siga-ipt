@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/careers")
+@RequestMapping("/api")
 public class StudyPlanController {
 
     private final StudyPlanService studyPlanService;
@@ -20,7 +20,7 @@ public class StudyPlanController {
     }
 
     // Create a study plan for a career -> 201
-    @PostMapping("/{careerId}/study-plans")
+    @PostMapping("/careers/{careerId}/study-plans")
     public ResponseEntity<StudyPlan> createStudyPlan(@PathVariable Long careerId,
                                                      @RequestBody StudyPlanRequest request) {
         StudyPlan created = studyPlanService.createStudyPlan(careerId, request);
@@ -28,8 +28,14 @@ public class StudyPlanController {
     }
 
     // List the study plans of a career -> 200
-    @GetMapping("/{careerId}/study-plans")
+    @GetMapping("/careers/{careerId}/study-plans")
     public ResponseEntity<List<StudyPlan>> getPlansByCareer(@PathVariable Long careerId) {
         return ResponseEntity.ok(studyPlanService.getPlansByCareer(careerId));
+    }
+
+    @DeleteMapping("/study-plans/{id}")
+    public ResponseEntity<Void> deleteStudyPlan(@PathVariable Long id) {
+        studyPlanService.deleteStudyPlan(id);
+        return ResponseEntity.noContent().build();
     }
 }

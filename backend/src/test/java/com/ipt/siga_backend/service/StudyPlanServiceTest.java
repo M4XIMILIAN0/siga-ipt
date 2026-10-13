@@ -8,7 +8,9 @@ import com.ipt.siga_backend.exception.BadRequestException;
 import com.ipt.siga_backend.exception.ConflictException;
 import com.ipt.siga_backend.exception.NotFoundException;
 import com.ipt.siga_backend.repository.CareerRepository;
+import com.ipt.siga_backend.repository.StudentRepository;
 import com.ipt.siga_backend.repository.StudyPlanRepository;
+import com.ipt.siga_backend.repository.SubjectRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -33,6 +35,12 @@ class StudyPlanServiceTest {
 
     @InjectMocks
     private StudyPlanService studyPlanService;
+
+    @Mock
+    private StudentRepository studentRepository;
+
+    @Mock
+    private SubjectRepository subjectRepository;
 
     // Helper: builds a sample career
     private Career buildCareer(Long id) {
@@ -153,5 +161,41 @@ class StudyPlanServiceTest {
         // Act + Assert
         assertThrows(NotFoundException.class, () -> studyPlanService.getPlansByCareer(99L));
         verify(studyPlanRepository, never()).findByCareerId(any());
+    }
+
+    // ---------- deleteStudyPlan ----------
+
+    @Test
+    void deleteStudyPlan_withoutStudentsOrSubjects_deletesPlan() {
+        StudyPlan plan = new StudyPlan();
+        plan.setId(5L);
+        when(studyPlanRepository.findById(5L)).thenReturn(Optional.of(plan));
+        when(studentRepository.existsByStudyPlanId(5L)).thenReturn(false);
+        when(subjectRepository.existsByStudyPlanId(5L)).thenReturn(false);
+
+        studyPlanService.deleteStudyPlan(5L);
+
+        verify(studyPlanRepository).delete(plan);
+    }
+
+    // RN-2.8: plan with students -> 409, never deleted
+    @Test
+    void deleteStudyPlan_withStudents_throwsConflict() {
+        when(studyPlanRepository.findById(5L)).thenReturn(Optional.of(new StudyPlan()));
+        when(studentRepository.existsByStudyPlanId(5L)).thenReturn(true);
+
+        assertThrows(ConflictException.class, () -> studyPlanService.deleteStudyPlan(5L));
+        verify(studyPlanRepository, never()).delete(any());
+    }
+
+    // Plan with subjects -> 409 (avoids FK error), never deleted
+    @Test
+    void deleteStudyPlan_withSubjects_throwsConflict() {
+        when(studyPlanRepository.findById(5L)).thenReturn(Optional.of(new StudyPlan()));
+        when(studentRepository.existsByStudyPlanId(5L)).thenReturn(false);
+        when(subjectRepository.existsByStudyPlanId(5L)).thenReturn(true);
+
+        assertThrows(ConflictException.class, () -> studyPlanService.deleteStudyPlan(5L));
+        verify(studyPlanRepository, never()).delete(any());
     }
 }
