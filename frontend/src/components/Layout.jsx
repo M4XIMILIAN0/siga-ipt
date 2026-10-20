@@ -12,6 +12,8 @@ function Layout({ children }) {
           </Typography>
           <Button color="inherit" component={RouterLink} to="/">Inicio</Button>
           <Button color="inherit" component={RouterLink} to="/careers">Carreras</Button>
+          <Button color="inherit" component={RouterLink} to="/students">Estudiantes</Button>
+          <Button color="inherit" component={RouterLink} to="/teachers">Docentes</Button>
         </Toolbar>
       </AppBar>
       <Container sx={{ mt: 4 }}>{children}</Container>
