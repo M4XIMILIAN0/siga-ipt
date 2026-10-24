@@ -18,6 +18,7 @@ function Layout({ children }) {
               <Button color="inherit" component={RouterLink} to="/careers">Carreras</Button>
               <Button color="inherit" component={RouterLink} to="/students">Estudiantes</Button>
               <Button color="inherit" component={RouterLink} to="/teachers">Docentes</Button>
+              <Button color="inherit" component={RouterLink} to="/periods">Oferta</Button>
             </>
           )}
 
