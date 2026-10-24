@@ -1,11 +1,13 @@
 package com.ipt.siga_backend.service;
 
 import com.ipt.siga_backend.dto.TeacherRequest;
+import com.ipt.siga_backend.entity.PeriodStatus;
 import com.ipt.siga_backend.entity.Teacher;
 import com.ipt.siga_backend.entity.TeacherStatus;
 import com.ipt.siga_backend.exception.BadRequestException;
 import com.ipt.siga_backend.exception.ConflictException;
 import com.ipt.siga_backend.exception.NotFoundException;
+import com.ipt.siga_backend.repository.SectionRepository;
 import com.ipt.siga_backend.repository.TeacherRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,9 +19,11 @@ import java.util.List;
 public class TeacherService {
 
     private final TeacherRepository teacherRepository;
+    private final SectionRepository sectionRepository;
 
-    public TeacherService(TeacherRepository teacherRepository) {
+    public TeacherService(TeacherRepository teacherRepository, SectionRepository sectionRepository) {
         this.teacherRepository = teacherRepository;
+        this.sectionRepository = sectionRepository;
     }
 
     @Transactional
@@ -127,15 +131,14 @@ public class TeacherService {
     }
 
     // RN-4.6: does the teacher have any section?
+    // RN-4.6: does the teacher have any section?
     private boolean hasSections(Long teacherId) {
-        // TODO Epic 5: return sectionRepository.existsByTeacherId(teacherId);
-        return false;
+        return sectionRepository.existsByTeacherId(teacherId);
     }
 
     // RN-4.7: does the teacher have sections in an OPEN period?
     private boolean hasSectionsInOpenPeriod(Long teacherId) {
-        // TODO Epic 5: return sectionRepository.existsByTeacherIdAndPeriodStatus(teacherId, PeriodStatus.OPEN);
-        return false;
+        return sectionRepository.existsByTeacherIdAndPeriodStatus(teacherId, PeriodStatus.OPEN);
     }
     // RN-4.1: RUN must be unique
     private void validateRunIsUnique(String run) {

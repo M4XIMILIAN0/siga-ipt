@@ -2,11 +2,13 @@ package com.ipt.siga_backend.service;
 
 import com.ipt.siga_backend.dto.TeacherRequest;
 import com.ipt.siga_backend.dto.TeacherUpdateRequest;
+import com.ipt.siga_backend.entity.PeriodStatus;
 import com.ipt.siga_backend.entity.Teacher;
 import com.ipt.siga_backend.entity.TeacherStatus;
 import com.ipt.siga_backend.exception.BadRequestException;
 import com.ipt.siga_backend.exception.ConflictException;
 import com.ipt.siga_backend.exception.NotFoundException;
+import com.ipt.siga_backend.repository.SectionRepository;
 import com.ipt.siga_backend.repository.TeacherRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -26,6 +28,8 @@ class TeacherServiceTest {
 
     @Mock
     private TeacherRepository teacherRepository;
+    @Mock
+    private SectionRepository sectionRepository;
 
     @InjectMocks
     private TeacherService teacherService;
@@ -229,24 +233,23 @@ class TeacherServiceTest {
         assertEquals(TeacherStatus.INACTIVE, result.getStatus());
     }
 
+    // RN-4.7: teacher with sections in an OPEN period cannot become INACTIVE
     @Test
-    void changeStatus_nullStatus_throwsBadRequest() {
+    void changeStatus_toInactiveWithOpenSections_throwsConflict() {
         when(teacherRepository.findById(1L)).thenReturn(Optional.of(buildTeacher(1L)));
+        when(sectionRepository.existsByTeacherIdAndPeriodStatus(1L, PeriodStatus.OPEN)).thenReturn(true);
 
-        assertThrows(BadRequestException.class, () -> teacherService.changeStatus(1L, null));
+        assertThrows(ConflictException.class, () -> teacherService.changeStatus(1L, TeacherStatus.INACTIVE));
         verify(teacherRepository, never()).save(any());
     }
 
-    // ========== deleteTeacher ==========
-
-    // RN-4.6: teacher without sections -> deleted
+    // RN-4.6: teacher with sections cannot be deleted
     @Test
-    void deleteTeacher_withoutSections_deletesTeacher() {
-        Teacher teacher = buildTeacher(1L);
-        when(teacherRepository.findById(1L)).thenReturn(Optional.of(teacher));
+    void deleteTeacher_withSections_throwsConflict() {
+        when(teacherRepository.findById(1L)).thenReturn(Optional.of(buildTeacher(1L)));
+        when(sectionRepository.existsByTeacherId(1L)).thenReturn(true);
 
-        teacherService.deleteTeacher(1L);
-
-        verify(teacherRepository).delete(teacher);
+        assertThrows(ConflictException.class, () -> teacherService.deleteTeacher(1L));
+        verify(teacherRepository, never()).delete(any());
     }
 }

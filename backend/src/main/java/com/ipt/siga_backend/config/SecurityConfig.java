@@ -31,6 +31,10 @@ public class SecurityConfig {
                         // API documentation is public (no data in it)
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
 
+                        // Epic 5: any logged user reads periods and the academic offer; only ADMIN manages them
+                        .requestMatchers(HttpMethod.GET, "/api/periods/**", "/api/sections/**").authenticated()
+                        .requestMatchers("/api/periods/**", "/api/sections/**").hasRole("ADMIN")
+
                         // Epics 2-3: any logged user can READ careers, plans and subjects...
                         .requestMatchers(HttpMethod.GET, "/api/careers/**", "/api/study-plans/**", "/api/subjects/**")
                         .authenticated()

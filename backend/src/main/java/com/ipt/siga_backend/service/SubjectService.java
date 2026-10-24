@@ -9,6 +9,7 @@ import com.ipt.siga_backend.exception.ConflictException;
 import com.ipt.siga_backend.exception.NotFoundException;
 import com.ipt.siga_backend.repository.StudyPlanRepository;
 import com.ipt.siga_backend.repository.SubjectRepository;
+import com.ipt.siga_backend.repository.SectionRepository; // <-- Nuevo import
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,11 +28,14 @@ public class SubjectService {
 
     private final SubjectRepository subjectRepository;
     private final StudyPlanRepository studyPlanRepository;
+    private final SectionRepository sectionRepository; // <-- Agregado
 
 
-    public SubjectService(SubjectRepository subjectRepository, StudyPlanRepository studyPlanRepository) {
+    // <-- Constructor actualizado
+    public SubjectService(SubjectRepository subjectRepository, StudyPlanRepository studyPlanRepository, SectionRepository sectionRepository) {
         this.subjectRepository = subjectRepository;
         this.studyPlanRepository = studyPlanRepository;
+        this.sectionRepository = sectionRepository;
     }
 
     @Transactional
@@ -97,7 +101,7 @@ public class SubjectService {
         Subject subject = findSubjectOrThrow(id);                            // 404
         validateIsNotPrerequisiteOfOthers(id);                               // 409
         // TODO RN-3.10 (Epic 7): reject if the subject appears in any academic record
-        // TODO (Epic 5): reject if the subject has sections
+        validateHasNoSections(id);                                           // FK guard -> 409 <-- Reemplazo de TODO (Epic 5)
         subjectRepository.delete(subject);
     }
 
@@ -208,6 +212,14 @@ public class SubjectService {
         }
     }
 
+    // <-- Método nuevo agregado
+    // A subject offered in a section cannot be deleted (the section's FK would break)
+    private void validateHasNoSections(Long subjectId) {
+        if (sectionRepository.existsBySubjectId(subjectId)) {
+            throw new ConflictException("Subject has sections and cannot be deleted");
+        }
+    }
+
     // ---------- mapping ----------
 
     // Entity -> DTO (prerequisites as codes, not nested objects)
@@ -230,7 +242,5 @@ public class SubjectService {
         validateSct(request.getSctCredits());
         validateWeeklyHours(request);
     }
-
-
 
 }

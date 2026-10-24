@@ -7,6 +7,7 @@ import com.ipt.siga_backend.entity.Subject;
 import com.ipt.siga_backend.exception.BadRequestException;
 import com.ipt.siga_backend.exception.ConflictException;
 import com.ipt.siga_backend.exception.NotFoundException;
+import com.ipt.siga_backend.repository.SectionRepository;
 import com.ipt.siga_backend.repository.StudyPlanRepository;
 import com.ipt.siga_backend.repository.SubjectRepository;
 import org.junit.jupiter.api.Test;
@@ -30,6 +31,9 @@ class SubjectServiceTest {
 
     @Mock
     private StudyPlanRepository studyPlanRepository;
+
+    @Mock
+    private SectionRepository sectionRepository;
 
     @InjectMocks
     private SubjectService subjectService;
@@ -294,6 +298,17 @@ class SubjectServiceTest {
     void deleteSubject_isPrerequisiteOfOthers_throwsConflict() {
         when(subjectRepository.findById(10L)).thenReturn(Optional.of(buildSubject(10L, "TAP101", 1)));
         when(subjectRepository.existsByPrerequisitesId(10L)).thenReturn(true);
+
+        assertThrows(ConflictException.class, () -> subjectService.deleteSubject(10L));
+        verify(subjectRepository, never()).delete(any());
+    }
+
+    // A subject with sections cannot be deleted -> 409
+    @Test
+    void deleteSubject_withSections_throwsConflict() {
+        when(subjectRepository.findById(10L)).thenReturn(Optional.of(buildSubject(10L, "TAP101", 1)));
+        when(subjectRepository.existsByPrerequisitesId(10L)).thenReturn(false);
+        when(sectionRepository.existsBySubjectId(10L)).thenReturn(true);
 
         assertThrows(ConflictException.class, () -> subjectService.deleteSubject(10L));
         verify(subjectRepository, never()).delete(any());
