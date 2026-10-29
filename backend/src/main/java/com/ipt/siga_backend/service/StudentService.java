@@ -10,6 +10,8 @@ import com.ipt.siga_backend.exception.NotFoundException;
 import com.ipt.siga_backend.repository.CareerRepository;
 import com.ipt.siga_backend.repository.StudentRepository;
 import com.ipt.siga_backend.repository.StudyPlanRepository;
+import com.ipt.siga_backend.repository.EnrollmentRepository;
+import com.ipt.siga_backend.repository.AcademicRecordRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,12 +23,17 @@ public class StudentService {
     private final StudentRepository studentRepository;
     private final CareerRepository careerRepository;
     private final StudyPlanRepository studyPlanRepository;
+    private final EnrollmentRepository enrollmentRepository;
+    private final AcademicRecordRepository academicRecordRepository;
 
     public StudentService(StudentRepository studentRepository, CareerRepository careerRepository,
-                          StudyPlanRepository studyPlanRepository) {
+                          StudyPlanRepository studyPlanRepository, EnrollmentRepository enrollmentRepository,
+                          AcademicRecordRepository academicRecordRepository) {
         this.studentRepository = studentRepository;
         this.careerRepository = careerRepository;
         this.studyPlanRepository = studyPlanRepository;
+        this.enrollmentRepository = enrollmentRepository;
+        this.academicRecordRepository = academicRecordRepository;
     }
 
     @Transactional
@@ -183,11 +190,11 @@ public class StudentService {
         }
     }
 
+
     // RN-1.6 / RN-1.8: does the student have enrollments or academic record?
     private boolean hasEnrollmentsOrAcademicRecord(Long studentId) {
-        // TODO Epic 6/7: return enrollmentRepository.existsByStudentId(studentId)
-        //                     || academicRecordRepository.existsByStudentId(studentId);
-        return false;
+        return enrollmentRepository.existsByStudentId(studentId)
+                || academicRecordRepository.existsByStudentId(studentId);
     }
 
     // ---------- mapping ----------
@@ -199,5 +206,12 @@ public class StudentService {
                 student.getId(), student.getRun(), student.getFullName(), student.getEmail(),
                 student.getStatus(), career.getId(), career.getName(),
                 plan.getId(), plan.getIdentifier());
+    }
+
+    // The JWT from Keycloak brings the email; we use it to find the logged student
+    public Long getStudentIdByEmail(String email) {
+        Student student = studentRepository.findByEmail(email)
+                .orElseThrow(() -> new NotFoundException("No student is linked to the user " + email));
+        return student.getId();
     }
 }

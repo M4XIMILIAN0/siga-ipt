@@ -40,6 +40,9 @@ class SectionServiceTest {
     @Mock
     private TeacherRepository teacherRepository;
 
+    @Mock
+    private EnrollmentRepository enrollmentRepository;
+
     @InjectMocks
     private SectionService sectionService;
 
@@ -314,5 +317,15 @@ class SectionServiceTest {
         sectionService.deleteSection(5L);
 
         verify(sectionRepository).delete(section);
+    }
+
+    // RN-5.12: section with enrolled students cannot be deleted
+    @Test
+    void deleteSection_withEnrollments_throwsConflict() {
+        when(sectionRepository.findById(5L)).thenReturn(Optional.of(buildSection()));
+        when(enrollmentRepository.existsBySectionId(5L)).thenReturn(true);
+
+        assertThrows(ConflictException.class, () -> sectionService.deleteSection(5L));
+        verify(sectionRepository, never()).delete(any());
     }
 }

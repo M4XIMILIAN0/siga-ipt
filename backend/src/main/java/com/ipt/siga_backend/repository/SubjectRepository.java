@@ -21,4 +21,6 @@ public interface SubjectRepository extends JpaRepository<Subject, Long> {
     boolean existsByPrerequisitesId(Long subjectId);
 
     boolean existsByStudyPlanId(Long studyPlanId);
+
+    long countByStudyPlanId(Long studyPlanId);   // RN-6.7 / RN-7.10: total subjects of the plan
 }

@@ -30,7 +30,12 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // API documentation is public (no data in it)
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
-
+                        // Period registrations ("matrícula"): ADMIN only, even for GET
+                        .requestMatchers("/api/periods/*/registrations").hasRole("ADMIN")
+                                // Epic 6: the logged student manages HIS enrollments
+                                .requestMatchers("/api/me/**").hasRole("STUDENT")
+                            // Epic 6: ADMIN consults all the enrollments of a period (section 4.3)
+                                .requestMatchers("/api/periods/*/enrollments").hasRole("ADMIN")
                         // Epic 5: any logged user reads periods and the academic offer; only ADMIN manages them
                         .requestMatchers(HttpMethod.GET, "/api/periods/**", "/api/sections/**").authenticated()
                         .requestMatchers("/api/periods/**", "/api/sections/**").hasRole("ADMIN")

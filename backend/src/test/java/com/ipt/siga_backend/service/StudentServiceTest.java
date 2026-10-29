@@ -7,9 +7,7 @@ import com.ipt.siga_backend.entity.*;
 import com.ipt.siga_backend.exception.BadRequestException;
 import com.ipt.siga_backend.exception.ConflictException;
 import com.ipt.siga_backend.exception.NotFoundException;
-import com.ipt.siga_backend.repository.CareerRepository;
-import com.ipt.siga_backend.repository.StudentRepository;
-import com.ipt.siga_backend.repository.StudyPlanRepository;
+import com.ipt.siga_backend.repository.*;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -34,6 +32,12 @@ class StudentServiceTest {
 
     @Mock
     private StudyPlanRepository studyPlanRepository;
+
+    @Mock
+    private EnrollmentRepository enrollmentRepository;
+
+    @Mock
+    private AcademicRecordRepository academicRecordRepository;
 
     @InjectMocks
     private StudentService studentService;
@@ -348,5 +352,40 @@ class StudentServiceTest {
         studentService.deleteStudent(1L);
 
         verify(studentRepository).delete(student);
+    }
+
+    // RN-1.6: a student with enrollments cannot be deleted
+    @Test
+    void deleteStudent_withEnrollments_throwsConflict() {
+        when(studentRepository.findById(1L)).thenReturn(Optional.of(buildStudent(1L, StudentStatus.REGULAR)));
+        when(enrollmentRepository.existsByStudentId(1L)).thenReturn(true);
+
+        assertThrows(ConflictException.class, () -> studentService.deleteStudent(1L));
+        verify(studentRepository, never()).delete(any());
+    }
+
+    // RN-1.8: a student with academic record cannot change career
+    @Test
+    void changeCareer_withAcademicRecord_throwsConflict() {
+        when(studentRepository.findById(1L)).thenReturn(Optional.of(buildStudent(1L, StudentStatus.REGULAR)));
+        when(academicRecordRepository.existsByStudentId(1L)).thenReturn(true);
+
+        assertThrows(ConflictException.class, () -> studentService.changeCareer(1L, 2L));
+        verify(studentRepository, never()).save(any());
+    }
+
+    // Link between Keycloak (JWT email) and our Student
+    @Test
+    void getStudentIdByEmail_existing_returnsId() {
+        when(studentRepository.findByEmail("juan.perez@ipt.cl")).thenReturn(Optional.of(buildStudent(1L, StudentStatus.REGULAR)));
+
+        assertEquals(1L, studentService.getStudentIdByEmail("juan.perez@ipt.cl"));
+    }
+
+    @Test
+    void getStudentIdByEmail_unknown_throwsNotFound() {
+        when(studentRepository.findByEmail("nobody@ipt.cl")).thenReturn(Optional.empty());
+
+        assertThrows(NotFoundException.class, () -> studentService.getStudentIdByEmail("nobody@ipt.cl"));
     }
 }

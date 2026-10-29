@@ -26,15 +26,18 @@ public class SectionService {
     private final AcademicPeriodRepository periodRepository;
     private final SubjectRepository subjectRepository;
     private final TeacherRepository teacherRepository;
+    private final EnrollmentRepository enrollmentRepository; // <-- Agregado
 
+    // <-- Constructor actualizado
     public SectionService(SectionRepository sectionRepository, ScheduleBlockRepository scheduleBlockRepository,
                           AcademicPeriodRepository periodRepository, SubjectRepository subjectRepository,
-                          TeacherRepository teacherRepository) {
+                          TeacherRepository teacherRepository, EnrollmentRepository enrollmentRepository) {
         this.sectionRepository = sectionRepository;
         this.scheduleBlockRepository = scheduleBlockRepository;
         this.periodRepository = periodRepository;
         this.subjectRepository = subjectRepository;
         this.teacherRepository = teacherRepository;
+        this.enrollmentRepository = enrollmentRepository;
     }
 
     @Transactional
@@ -175,8 +178,7 @@ public class SectionService {
 
     // RN-5.12: does the section have enrollments?
     private boolean hasEnrollments(Long sectionId) {
-        // TODO Epic 6: return enrollmentRepository.existsBySectionId(sectionId);
-        return false;
+        return enrollmentRepository.existsBySectionId(sectionId);
     }
 
     // ---------- finders ----------

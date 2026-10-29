@@ -7,6 +7,7 @@ import com.ipt.siga_backend.entity.Subject;
 import com.ipt.siga_backend.exception.BadRequestException;
 import com.ipt.siga_backend.exception.ConflictException;
 import com.ipt.siga_backend.exception.NotFoundException;
+import com.ipt.siga_backend.repository.AcademicRecordRepository;
 import com.ipt.siga_backend.repository.SectionRepository;
 import com.ipt.siga_backend.repository.StudyPlanRepository;
 import com.ipt.siga_backend.repository.SubjectRepository;
@@ -34,6 +35,9 @@ class SubjectServiceTest {
 
     @Mock
     private SectionRepository sectionRepository;
+
+    @Mock
+    private AcademicRecordRepository academicRecordRepository;
 
     @InjectMocks
     private SubjectService subjectService;
@@ -309,6 +313,16 @@ class SubjectServiceTest {
         when(subjectRepository.findById(10L)).thenReturn(Optional.of(buildSubject(10L, "TAP101", 1)));
         when(subjectRepository.existsByPrerequisitesId(10L)).thenReturn(false);
         when(sectionRepository.existsBySubjectId(10L)).thenReturn(true);
+
+        assertThrows(ConflictException.class, () -> subjectService.deleteSubject(10L));
+        verify(subjectRepository, never()).delete(any());
+    }
+
+    // RN-3.10: subject in an academic record cannot be deleted
+    @Test
+    void deleteSubject_inAcademicRecord_throwsConflict() {
+        when(subjectRepository.findById(10L)).thenReturn(Optional.of(buildSubject(10L, "TAP101", 1)));
+        when(academicRecordRepository.existsBySubjectId(10L)).thenReturn(true);
 
         assertThrows(ConflictException.class, () -> subjectService.deleteSubject(10L));
         verify(subjectRepository, never()).delete(any());

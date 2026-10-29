@@ -9,7 +9,8 @@ import com.ipt.siga_backend.exception.ConflictException;
 import com.ipt.siga_backend.exception.NotFoundException;
 import com.ipt.siga_backend.repository.StudyPlanRepository;
 import com.ipt.siga_backend.repository.SubjectRepository;
-import com.ipt.siga_backend.repository.SectionRepository; // <-- Nuevo import
+import com.ipt.siga_backend.repository.SectionRepository;
+import com.ipt.siga_backend.repository.AcademicRecordRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,14 +29,17 @@ public class SubjectService {
 
     private final SubjectRepository subjectRepository;
     private final StudyPlanRepository studyPlanRepository;
-    private final SectionRepository sectionRepository; // <-- Agregado
+    private final SectionRepository sectionRepository;
+    private final AcademicRecordRepository academicRecordRepository;
 
 
-    // <-- Constructor actualizado
-    public SubjectService(SubjectRepository subjectRepository, StudyPlanRepository studyPlanRepository, SectionRepository sectionRepository) {
+
+    public SubjectService(SubjectRepository subjectRepository, StudyPlanRepository studyPlanRepository,
+                          SectionRepository sectionRepository, AcademicRecordRepository academicRecordRepository) {
         this.subjectRepository = subjectRepository;
         this.studyPlanRepository = studyPlanRepository;
         this.sectionRepository = sectionRepository;
+        this.academicRecordRepository = academicRecordRepository;
     }
 
     @Transactional
@@ -100,8 +104,8 @@ public class SubjectService {
     public void deleteSubject(Long id) {
         Subject subject = findSubjectOrThrow(id);                            // 404
         validateIsNotPrerequisiteOfOthers(id);                               // 409
-        // TODO RN-3.10 (Epic 7): reject if the subject appears in any academic record
-        validateHasNoSections(id);                                           // FK guard -> 409 <-- Reemplazo de TODO (Epic 5)
+        validateNotInAcademicRecord(id);                                     // RN-3.10 -> 409
+        validateHasNoSections(id);                                           // FK guard -> 409
         subjectRepository.delete(subject);
     }
 
@@ -212,7 +216,14 @@ public class SubjectService {
         }
     }
 
-    // <-- Método nuevo agregado
+    // <-- Método nuevo
+    // RN-3.10: a subject that appears in any academic record cannot be deleted
+    private void validateNotInAcademicRecord(Long subjectId) {
+        if (academicRecordRepository.existsBySubjectId(subjectId)) {
+            throw new ConflictException("Subject is part of students' academic records and cannot be deleted");
+        }
+    }
+
     // A subject offered in a section cannot be deleted (the section's FK would break)
     private void validateHasNoSections(Long subjectId) {
         if (sectionRepository.existsBySubjectId(subjectId)) {
