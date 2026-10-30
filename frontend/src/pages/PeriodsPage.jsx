@@ -11,6 +11,7 @@ import studyPlanService from '../services/studyPlanService';
 import subjectService from '../services/subjectService';
 import teacherService from '../services/teacherService';
 import PeriodEnrollmentsPanel from '../components/PeriodEnrollmentsPanel';
+import ClosePeriodButton from '../components/ClosePeriodButton';
 
 const EMPTY_SECTION_FORM = { careerId: '', subjectId: '', teacherId: '', capacity: '', blocksText: '' };
 
@@ -232,6 +233,7 @@ function PeriodsPage() {
             </TableContainer>
           )}
           <PeriodEnrollmentsPanel periodId={selectedPeriodId} periodOpen={selectedPeriod.status === 'OPEN'} />
+          <ClosePeriodButton period={selectedPeriod} onClosed={loadPeriods} />
         </>
       )}
 

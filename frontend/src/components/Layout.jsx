@@ -21,8 +21,14 @@ function Layout({ children }) {
               <Button color="inherit" component={RouterLink} to="/periods">Oferta</Button>
             </>
           )}
+          {hasRole('TEACHER') && (
+            <Button color="inherit" component={RouterLink} to="/my-sections">Mis secciones</Button>
+          )}
           {hasRole('STUDENT') && (
-          <Button color="inherit" component={RouterLink} to="/my-enrollments">Mis inscripciones</Button>
+            <>
+              <Button color="inherit" component={RouterLink} to="/my-enrollments">Mis inscripciones</Button>
+              <Button color="inherit" component={RouterLink} to="/my-record">Mi historial</Button>
+            </>
           )}
 
           <Typography sx={{ mx: 2 }}>{username}</Typography>
