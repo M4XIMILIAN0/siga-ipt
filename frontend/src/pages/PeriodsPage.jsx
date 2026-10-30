@@ -10,6 +10,7 @@ import careerService from '../services/careerService';
 import studyPlanService from '../services/studyPlanService';
 import subjectService from '../services/subjectService';
 import teacherService from '../services/teacherService';
+import PeriodEnrollmentsPanel from '../components/PeriodEnrollmentsPanel';
 
 const EMPTY_SECTION_FORM = { careerId: '', subjectId: '', teacherId: '', capacity: '', blocksText: '' };
 
@@ -230,6 +231,7 @@ function PeriodsPage() {
               </Table>
             </TableContainer>
           )}
+          <PeriodEnrollmentsPanel periodId={selectedPeriodId} periodOpen={selectedPeriod.status === 'OPEN'} />
         </>
       )}
 

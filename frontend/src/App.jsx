@@ -7,6 +7,8 @@ import CareerDetailPage from './pages/CareerDetailPage';
 import StudentsPage from './pages/StudentsPage';
 import TeachersPage from './pages/TeachersPage';
 import PeriodsPage from './pages/PeriodsPage';
+import MyEnrollmentsPage from './pages/MyEnrollmentsPage';
+
 
 function App() {
   return (
@@ -20,6 +22,7 @@ function App() {
         <Route path="/students" element={<RoleRoute roles={['ADMIN']}><StudentsPage /></RoleRoute>} />
         <Route path="/teachers" element={<RoleRoute roles={['ADMIN']}><TeachersPage /></RoleRoute>} />
         <Route path="/periods" element={<RoleRoute roles={['ADMIN']}><PeriodsPage /></RoleRoute>} />
+        <Route path="/my-enrollments" element={<RoleRoute roles={['STUDENT']}><MyEnrollmentsPage /></RoleRoute>} />
       </Routes>
     </Layout>
   );
