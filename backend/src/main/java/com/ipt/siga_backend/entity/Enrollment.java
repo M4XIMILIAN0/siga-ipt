@@ -39,4 +39,12 @@ public class Enrollment {
 
     // RN-7.3: at most one final grade (null = not graded yet, used by RN-7.7)
     private Double finalGrade;
+
+    // RN-7.5: PASSED if grade >= 4.0, FAILED if < 4.0 (calculated, not stored)
+    public SubjectResult getResult() {
+        if (finalGrade == null) {
+            return null;
+        }
+        return finalGrade >= 4.0 ? SubjectResult.PASSED : SubjectResult.FAILED;
+    }
 }

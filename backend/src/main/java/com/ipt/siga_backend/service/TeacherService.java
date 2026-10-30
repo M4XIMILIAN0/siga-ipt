@@ -153,4 +153,11 @@ public class TeacherService {
             throw new ConflictException("A teacher with email " + email + " already exists");
         }
     }
+
+    // The JWT from Keycloak brings the email; we use it to find the logged teacher
+    public Long getTeacherIdByEmail(String email) {
+        Teacher teacher = teacherRepository.findByEmail(email)
+                .orElseThrow(() -> new NotFoundException("No teacher is linked to the user " + email));
+        return teacher.getId();
+    }
 }

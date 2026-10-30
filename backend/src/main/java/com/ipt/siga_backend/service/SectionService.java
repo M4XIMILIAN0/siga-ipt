@@ -217,4 +217,13 @@ public class SectionService {
                 section.getTeacher().getId(), section.getTeacher().getFullName(),
                 section.getCapacity(), blockCodes);
     }
+
+    // RN-P.2: the teacher sees HIS sections of a period
+    @Transactional
+    public List<SectionResponse> getSectionsByTeacher(Long teacherId, Long periodId) {
+        findPeriodOrThrow(periodId);
+        return sectionRepository.findByTeacherIdAndPeriodId(teacherId, periodId).stream()
+                .map(section -> toResponse(section))
+                .toList();
+    }
 }

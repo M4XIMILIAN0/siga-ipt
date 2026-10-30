@@ -34,6 +34,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/periods/*/registrations").hasRole("ADMIN")
                                 // Epic 6: the logged student manages HIS enrollments
                                 .requestMatchers("/api/me/**").hasRole("STUDENT")
+                        // Epic 7: the logged teacher manages the grades of HIS sections
+                        .requestMatchers("/api/teacher/**").hasRole("TEACHER")
                             // Epic 6: ADMIN consults all the enrollments of a period (section 4.3)
                                 .requestMatchers("/api/periods/*/enrollments").hasRole("ADMIN")
                         // Epic 5: any logged user reads periods and the academic offer; only ADMIN manages them

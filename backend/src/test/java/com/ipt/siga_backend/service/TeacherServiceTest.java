@@ -252,4 +252,18 @@ class TeacherServiceTest {
         assertThrows(ConflictException.class, () -> teacherService.deleteTeacher(1L));
         verify(teacherRepository, never()).delete(any());
     }
+
+    @Test
+    void getTeacherIdByEmail_existing_returnsId() {
+        when(teacherRepository.findByEmail("maria.gonzalez@ipt.cl")).thenReturn(Optional.of(buildTeacher(1L)));
+
+        assertEquals(1L, teacherService.getTeacherIdByEmail("maria.gonzalez@ipt.cl"));
+    }
+
+    @Test
+    void getTeacherIdByEmail_unknown_throwsNotFound() {
+        when(teacherRepository.findByEmail("nobody@ipt.cl")).thenReturn(Optional.empty());
+
+        assertThrows(NotFoundException.class, () -> teacherService.getTeacherIdByEmail("nobody@ipt.cl"));
+    }
 }

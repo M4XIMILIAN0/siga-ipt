@@ -19,5 +19,6 @@ public interface SectionRepository extends JpaRepository<Section, Long> {
     boolean existsByTeacherId(Long teacherId);                                     // RN-4.6
     boolean existsByTeacherIdAndPeriodStatus(Long teacherId, PeriodStatus status); // RN-4.7
     boolean existsBySubjectId(Long subjectId);
+    List<Section> findByTeacherIdAndPeriodId(Long teacherId, Long periodId);   // RN-P.2: teacher's sections
     // subject delete guard
 }

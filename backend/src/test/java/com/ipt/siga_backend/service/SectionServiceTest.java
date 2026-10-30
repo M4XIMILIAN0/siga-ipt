@@ -328,4 +328,12 @@ class SectionServiceTest {
         assertThrows(ConflictException.class, () -> sectionService.deleteSection(5L));
         verify(sectionRepository, never()).delete(any());
     }
+    // RN-P.2: the teacher sees his sections of a period
+    @Test
+    void getSectionsByTeacher_returnsTeacherSections() {
+        when(periodRepository.findById(1L)).thenReturn(Optional.of(buildPeriod(PeriodStatus.OPEN)));
+        when(sectionRepository.findByTeacherIdAndPeriodId(7L, 1L)).thenReturn(List.of(buildSection()));
+
+        assertEquals("TAP101", sectionService.getSectionsByTeacher(7L, 1L).get(0).getSubjectCode());
+    }
 }
