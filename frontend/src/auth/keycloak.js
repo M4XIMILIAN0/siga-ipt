@@ -1,12 +1,12 @@
 import Keycloak from 'keycloak-js';
 
 // Connection data comes from .env.development
+// Dev: values from .env.development. Docker/cloud: same host as the app, port 8090
 const keycloak = new Keycloak({
-  url: import.meta.env.VITE_KEYCLOAK_URL,
-  realm: import.meta.env.VITE_KEYCLOAK_REALM,
-  clientId: import.meta.env.VITE_KEYCLOAK_CLIENT_ID,
+  url: import.meta.env.VITE_KEYCLOAK_URL || `${window.location.protocol}//${window.location.hostname}:8090`,
+  realm: import.meta.env.VITE_KEYCLOAK_REALM || 'siga-ipt',
+  clientId: import.meta.env.VITE_KEYCLOAK_CLIENT_ID || 'siga-frontend',
 });
-
 let initPromise = null;
 
 // React StrictMode runs effects TWICE in development,

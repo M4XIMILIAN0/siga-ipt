@@ -3,12 +3,17 @@ package com.ipt.siga_backend.config;
 import com.ipt.siga_backend.dto.CareerRequest;
 import com.ipt.siga_backend.dto.StudyPlanRequest;
 import com.ipt.siga_backend.dto.SubjectRequest;
+import com.ipt.siga_backend.dto.StudentRequest;
+import com.ipt.siga_backend.dto.TeacherRequest;
 import com.ipt.siga_backend.entity.Career;
 import com.ipt.siga_backend.entity.StudyPlan;
 import com.ipt.siga_backend.repository.CareerRepository;
 import com.ipt.siga_backend.service.CareerService;
 import com.ipt.siga_backend.service.StudyPlanService;
 import com.ipt.siga_backend.service.SubjectService;
+import com.ipt.siga_backend.service.TeacherService;
+import com.ipt.siga_backend.service.StudentService;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
@@ -22,23 +27,44 @@ public class DataLoader implements CommandLineRunner {
     private final CareerService careerService;
     private final StudyPlanService studyPlanService;
     private final SubjectService subjectService;
+    private final TeacherService teacherService;
+    private final StudentService studentService;
+    private final boolean loadData;
 
     public DataLoader(CareerRepository careerRepository, CareerService careerService,
-                      StudyPlanService studyPlanService, SubjectService subjectService) {
+                      StudyPlanService studyPlanService, SubjectService subjectService,
+                      TeacherService teacherService, StudentService studentService,
+                      @Value("${app.load-data}") boolean loadData) {
         this.careerRepository = careerRepository;
         this.careerService = careerService;
         this.studyPlanService = studyPlanService;
         this.subjectService = subjectService;
+        this.teacherService = teacherService;
+        this.studentService = studentService;
+        this.loadData = loadData;
     }
 
     @Override
     public void run(String... args) {
-        if (careerRepository.count() > 0) {
-            return;   // data already loaded -> do nothing
+        // Only one replica loads data (APP_LOAD_DATA), and only if the DB is empty
+        if (!loadData || careerRepository.count() > 0) {
+            return;
         }
         loadAnalystProgrammer();
         loadDataAnalysis();
         loadCybersecurity();
+        loadDemoPeople();
+    }
+
+    // Demo teachers and student: same emails as the Keycloak users (teacher1, teacher2, student1)
+    private void loadDemoPeople() {
+        teacherService.createTeacher(new TeacherRequest("15432876-5", "María González", "maria.gonzalez@ipt.cl",
+                "Ingeniera Civil en Informática", "Magíster en Ingeniería de Software"));
+        teacherService.createTeacher(new TeacherRequest("13987654-2", "Juan Pérez", "juan.perez@ipt.cl",
+                "Ingeniero en Computación", "Magíster en Ciencias de la Computación"));
+        Long analystCareerId = careerRepository.findByCode("10450").orElseThrow().getId();
+        studentService.createStudent(new StudentRequest("19234123-4", "Pedro Soto", "pedro.soto@ipt.cl",
+                analystCareerId));
     }
 
     // 10450 - Técnico Analista Programador, plan 2021.3

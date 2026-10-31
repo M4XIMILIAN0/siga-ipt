@@ -1,0 +1,52 @@
+{
+  "realm": "siga-ipt",
+  "enabled": true,
+  "roles": {
+    "realm": [
+      { "name": "ADMIN" },
+      { "name": "TEACHER" },
+      { "name": "STUDENT" }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "siga-frontend",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "redirectUris": ["*"],
+      "webOrigins": ["*"],
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "+"
+      }
+    }
+  ],
+  "users": [
+    {
+      "username": "admin1", "email": "admin@ipt.cl", "firstName": "Admin", "lastName": "IPT",
+      "enabled": true, "emailVerified": true,
+      "credentials": [{ "type": "password", "value": "admin123", "temporary": false }],
+      "realmRoles": ["ADMIN"]
+    },
+    {
+      "username": "teacher1", "email": "maria.gonzalez@ipt.cl", "firstName": "María", "lastName": "González",
+      "enabled": true, "emailVerified": true,
+      "credentials": [{ "type": "password", "value": "teacher123", "temporary": false }],
+      "realmRoles": ["TEACHER"]
+    },
+    {
+      "username": "teacher2", "email": "juan.perez@ipt.cl", "firstName": "Juan", "lastName": "Pérez",
+      "enabled": true, "emailVerified": true,
+      "credentials": [{ "type": "password", "value": "teacher123", "temporary": false }],
+      "realmRoles": ["TEACHER"]
+    },
+    {
+      "username": "student1", "email": "pedro.soto@ipt.cl", "firstName": "Pedro", "lastName": "Soto",
+      "enabled": true, "emailVerified": true,
+      "credentials": [{ "type": "password", "value": "student123", "temporary": false }],
+      "realmRoles": ["STUDENT"]
+    }
+  ]
+}

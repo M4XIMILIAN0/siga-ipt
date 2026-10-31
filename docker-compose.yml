@@ -1,0 +1,121 @@
+services:
+
+  # ---------- Database (volume: data survives restarts) ----------
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    networks:
+      - siga-network
+    restart: unless-stopped
+
+  # ---------- Keycloak (imports the realm on startup) ----------
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.7.1
+    command: start-dev --import-realm
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN_USER}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
+    volumes:
+      - ./keycloak/siga-ipt-realm.json:/opt/keycloak/data/import/siga-ipt-realm.json:ro
+    ports:
+      - "8090:8080"
+    networks:
+      - siga-network
+    restart: unless-stopped
+
+  # ---------- Backend replica 1 (the only one that loads Appendix A) ----------
+  backend1:
+    image: ${DOCKERHUB_USER}/siga-backend:latest
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/${DB_NAME}
+      DB_USERNAME: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      KEYCLOAK_ISSUER_URI: http://${PUBLIC_HOST}:8090/realms/siga-ipt
+      KEYCLOAK_JWK_SET_URI: http://keycloak:8080/realms/siga-ipt/protocol/openid-connect/certs
+      APP_LOAD_DATA: "true"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c '</dev/tcp/localhost/8080' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+    networks:
+      - siga-network
+    restart: unless-stopped
+
+  # ---------- Backend replica 2 ----------
+  backend2:
+    image: ${DOCKERHUB_USER}/siga-backend:latest
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/${DB_NAME}
+      DB_USERNAME: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      KEYCLOAK_ISSUER_URI: http://${PUBLIC_HOST}:8090/realms/siga-ipt
+      KEYCLOAK_JWK_SET_URI: http://keycloak:8080/realms/siga-ipt/protocol/openid-connect/certs
+      APP_LOAD_DATA: "false"
+    depends_on:
+      backend1:
+        condition: service_healthy
+    networks:
+      - siga-network
+    restart: unless-stopped
+
+  # ---------- Backend replica 3 ----------
+  backend3:
+    image: ${DOCKERHUB_USER}/siga-backend:latest
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/${DB_NAME}
+      DB_USERNAME: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      KEYCLOAK_ISSUER_URI: http://${PUBLIC_HOST}:8090/realms/siga-ipt
+      KEYCLOAK_JWK_SET_URI: http://keycloak:8080/realms/siga-ipt/protocol/openid-connect/certs
+      APP_LOAD_DATA: "false"
+    depends_on:
+      backend1:
+        condition: service_healthy
+    networks:
+      - siga-network
+    restart: unless-stopped
+
+  # ---------- Frontend (one instance) ----------
+  frontend:
+    image: ${DOCKERHUB_USER}/siga-frontend:latest
+    networks:
+      - siga-network
+    restart: unless-stopped
+
+  # ---------- Nginx: load balancer + single entry point ----------
+  nginx:
+    image: nginx:1.27-alpine
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - backend1
+      - backend2
+      - backend3
+      - frontend
+    networks:
+      - siga-network
+    restart: unless-stopped
+
+volumes:
+  postgres-data:
+
+networks:
+  siga-network:
+    driver: bridge
