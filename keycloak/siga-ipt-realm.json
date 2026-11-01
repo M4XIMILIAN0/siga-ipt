@@ -1,6 +1,7 @@
 {
   "realm": "siga-ipt",
   "enabled": true,
+  "sslRequired": "none",
   "roles": {
     "realm": [
       { "name": "ADMIN" },
